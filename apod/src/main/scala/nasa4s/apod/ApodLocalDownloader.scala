@@ -7,9 +7,8 @@ import cats.implicits._
 import nasa4s.core.ApiKey
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
-// import io.circe.syntax._
 
-object ApodTestApp extends IOApp {
+object ApodLocalDownloader extends IOApp {
   def localDownload[F[_]](client: Client[F], apiKey: ApiKey, fileName: String, blocker: Blocker)(
     implicit cs: ContextShift[F],
     F: ConcurrentEffect[F]
@@ -36,7 +35,6 @@ object ApodTestApp extends IOApp {
     builder
       .resource
       .use { client =>
-        // Apod[IO](client, apiKey).call("2019-11-02").flatMap { response => IO(println(response.asJson.spaces2)) }
         localDownload[IO](client, apiKey, "foo.jpg", blocker)
       }
       .as(ExitCode.Success)
