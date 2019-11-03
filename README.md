@@ -1,5 +1,7 @@
 #### apod4s
 
+[![Join the chat at https://gitter.im/nasa4s/community](https://badges.gitter.im/nasa4s/community.svg)](https://gitter.im/nasa4s/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 `apod4s` is a purely functional API wrapper written in Scala. It wraps the Astronomy Picture of the Day (APOD) API provided by NASA.
 
 ###### Usage
