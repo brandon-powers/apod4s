@@ -5,7 +5,7 @@ package neows4s
  * @todo Model request/response domain types.
  * @see [[https://api.nasa.gov/]] Under "Asteroids - NeoWs" */
 trait NeoWs[F[_]] {
-  def feed: F[Unit]git q
+  def feed: F[Unit]
 
   def lookup: F[Unit]
 
