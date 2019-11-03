@@ -1,9 +1,9 @@
-package neows4s
+package nasa4s.neows
 
-/** Wraps the Near Earth Object Web Service (NeoWs) from NASA
+/** Wraps the Near Earth Object Web Service (nasa4s.neows.NeoWs) from NASA
  *
  * @todo Model request/response domain types.
- * @see [[https://api.nasa.gov/]] Under "Asteroids - NeoWs" */
+ * @see [[https://api.nasa.gov/]] Under "Asteroids - nasa4s.neows.NeoWs" */
 trait NeoWs[F[_]] {
   def feed: F[Unit]
 

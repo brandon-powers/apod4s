@@ -1,4 +1,4 @@
-package apod4s
+package nasa4s.apod
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._

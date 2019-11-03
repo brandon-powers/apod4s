@@ -1,8 +1,8 @@
-package apod4s
+package nasa4s.apod
 
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 
-import cats.effect.{Blocker, ConcurrentEffect, ContextShift, IO}
+import cats.effect.{Blocker, ConcurrentEffect, ContextShift}
 import com.typesafe.config.{Config, ConfigFactory}
 import fs2.Stream
 import io.circe.generic.JsonCodec
