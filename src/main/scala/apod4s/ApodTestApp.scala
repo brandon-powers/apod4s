@@ -1,10 +1,7 @@
 package apod4s
 
-import java.io.{BufferedOutputStream, FileOutputStream}
-
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
-import io.circe.syntax._
 import org.http4s.client.blaze.BlazeClientBuilder
 
 object ApodTestApp extends IOApp {
@@ -12,28 +9,11 @@ object ApodTestApp extends IOApp {
     val builder = BlazeClientBuilder[IO](scala.concurrent.ExecutionContext.global)
     val blocker = Blocker.liftExecutionContext(scala.concurrent.ExecutionContext.global)
 
-    builder.resource.use { client =>
-      val createOutputStream: IO[BufferedOutputStream] = IO {
-        new BufferedOutputStream(
-          new FileOutputStream("bran-test.jpg")
-        )
+    builder
+      .resource
+      .use { client =>
+        Apod.downloadToLocalFile[IO](client, "bran-test2.jpg", blocker)
       }
-      val apod = Apod[IO](client)
-
-      val fetchAndPrintMetadata = apod.call.flatMap { response =>
-        IO(println(response.asJson.spaces2))
-      }
-
-      val downloadAndWriteToLocalFile =
-        apod
-          .download
-          .observe(
-            fs2.io.writeOutputStream[IO](createOutputStream, blocker)
-          )
-          .compile
-          .drain
-
-      fetchAndPrintMetadata *> downloadAndWriteToLocalFile
-    }.as(ExitCode.Success)
+      .as(ExitCode.Success)
   }
 }

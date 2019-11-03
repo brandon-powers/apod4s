@@ -1,6 +1,8 @@
 package apod4s
 
-import cats.effect.ConcurrentEffect
+import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
+
+import cats.effect.{Blocker, ConcurrentEffect, ContextShift, IO}
 import com.typesafe.config.{Config, ConfigFactory}
 import fs2.Stream
 import io.circe.generic.JsonCodec
@@ -58,5 +60,24 @@ object Apod {
           client.stream(request).flatMap(_.body)
         }
     }
+  }
+
+  /** Extension method to download the APOD to a local file */
+  def downloadToLocalFile[F[_]](client: Client[F], fileName: String, blocker: Blocker)(
+    implicit cs: ContextShift[F],
+    F: ConcurrentEffect[F]
+  ): F[Unit] = {
+    val createOutputStream: F[OutputStream] = F.delay {
+      new BufferedOutputStream(
+        new FileOutputStream(fileName))
+    }
+
+    Apod[F](client)
+      .download
+      .observe(
+        fs2.io.writeOutputStream[F](createOutputStream, blocker)
+      )
+      .compile
+      .drain
   }
 }
