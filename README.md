@@ -2,21 +2,21 @@
 
 [![Join the chat at https://gitter.im/nasa4s/community](https://badges.gitter.im/nasa4s/community.svg)](https://gitter.im/brandon-powers/nasa4s?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-`nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/).
+`nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/), with each as an `sbt` sub-project.
+
+- `nasa4s-apod`
+- `nasa4s-neows` (in progress)
 
 #### Astronomy Picture of the Day (APOD)
-
-##### Usage
-
-To call the API for APOD metadata:
 
 ```scala
 import io.circe.syntax._
 
 val client: Client[F] = ???
 
+// To fetch APOD metadata for November 2, 2019
 Apod[IO](client)
-  .call
+  .call(date = "2019-11-02")
   .flatMap { response: Apod.Response =>
     IO(println(response.asJson.spaces2))
   }.unsafeRunSync()
@@ -32,25 +32,10 @@ Apod[IO](client)
 //   "url" : "https://apod.nasa.gov/apod/image/1405/flame_optical.jpg"
 // }
 ```    
-
-To download the APOD as a stream:
-
 ```scala
+// To download the APOD for November 2, 2019
 val client: Client[F] = ???
 val bytes: Stream[F, Byte] = Apod[IO](client).download
-```
-
-To locally download the APOD to a file:
-
-```scala
-val client: Client[F] = ???
-val blocker: Blocker = ???
-
-Apod.downloadToLocalFile[IO](
-  client, 
-  fileName = "bran-test2.jpg", 
-  blocker
-)
 ```
 
 #### Near Earth Object Web Service (NeoWs)
