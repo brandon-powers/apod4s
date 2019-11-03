@@ -2,6 +2,7 @@ package apod4s
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
+import io.circe.syntax._
 import org.http4s.client.blaze.BlazeClientBuilder
 
 object ApodTestApp extends IOApp {
@@ -12,7 +13,8 @@ object ApodTestApp extends IOApp {
     builder
       .resource
       .use { client =>
-        Apod.downloadToLocalFile[IO](client, "bran-test2.jpg", blocker)
+        Apod[IO](client).call.flatMap { response => IO(println(response.asJson.spaces2)) }
+        // Apod.downloadToLocalFile[IO](client, "bran-test2.jpg", blocker)
       }
       .as(ExitCode.Success)
   }
