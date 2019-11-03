@@ -11,7 +11,8 @@ object CompilerPlugins {
 }
 
 object Dependencies {
-  val `nasa4s-apod` = Seq(
+  lazy val `nasa4s-core` = Seq()
+  lazy val `nasa4s-apod` = Seq(
     "org.http4s" %% "http4s-dsl" % Version.http4s,
     "org.http4s" %% "http4s-blaze-client" % Version.http4s,
     "com.typesafe" % "config" % "1.4.0",
@@ -23,5 +24,5 @@ object Dependencies {
     "io.circe" %% "circe-generic-extras" % "0.8.0"
   )
 
-  val `nasa4s-neows` = Seq()
+  lazy val `nasa4s-neows` = Seq()
 }

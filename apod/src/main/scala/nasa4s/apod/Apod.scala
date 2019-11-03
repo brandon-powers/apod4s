@@ -1,28 +1,34 @@
 package nasa4s.apod
 
-import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
-
-import cats.effect.{Blocker, ConcurrentEffect, ContextShift}
-import com.typesafe.config.{Config, ConfigFactory}
+import cats.effect.Sync
 import fs2.Stream
 import io.circe.generic.JsonCodec
+import nasa4s.core.ApiKey
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.{EntityDecoder, Request, Uri}
+import org.http4s.{EntityDecoder, Method, Request, Uri}
 
-/** @see [[https://api.nasa.gov/]] Under "APOD" */
+/** Wraps the Astronomy Picture of the Day (APOD) API
+ *
+ * @see [[https://api.nasa.gov/]] APOD */
 trait Apod[F[_]] {
-  def call: F[Apod.Response]
+  /** Fetches APOD metadata for a given date.
+   *
+   * @param date The date of an APOD
+   * @param hd   To work with an HD or non-HD version of an APOD; defaults to true */
+  def call(date: String, hd: Boolean = true): F[Apod.Response]
 
-  def download: Stream[F, Byte]
+  /** Downloads the bytes of an APOD as a stream, removing
+   * the need to request the metadata before downloading.
+   *
+   * @param date The date of an APOD
+   * @param hd   To work with an HD or non-HD version of an APOD; defaults to true
+   * */
+  def download(date: String, hd: Boolean = true): Stream[F, Byte]
 }
 
 object Apod {
   val url = "https://api.nasa.gov/planetary/apod"
-
-  case class Parameters(api_key: String, date: String, hd: Boolean = true) {
-    def build: String = s"date=$date&hd=$hd&api_key=$api_key"
-  }
 
   /** @todo Fix snake case naming and JSON parsing. */
   @JsonCodec
@@ -36,48 +42,28 @@ object Apod {
                       url: String)
 
 
-  def apply[F[_]](client: Client[F])(implicit F: ConcurrentEffect[F]): Apod[F] = new Apod[F] {
+  def apply[F[_] : Sync](client: Client[F], apiKey: ApiKey): Apod[F] = new ApodImpl[F](client, apiKey)
+
+  private class ApodImpl[F[_] : Sync](client: Client[F], apiKey: ApiKey) extends Apod[F] {
     implicit val responseEntityDecoder: EntityDecoder[F, Response] = jsonOf[F, Response]
 
-    override def call: F[Response] = {
-      val root: Config = ConfigFactory.load
-      val apiKey = root.getString("apod.api-key")
-
-      // TODO: Fix/clean-up parameter passing.
-      val parameters = Parameters(apiKey, "2019-11-02")
-      val uri = Uri.unsafeFromString(s"${Apod.url}?${parameters.build}")
-      val request = Request[F](org.http4s.Method.GET, uri)
+    override def call(date: String, hd: Boolean): F[Response] = {
+      val uri = Uri.unsafeFromString(s"${Apod.url}?date=$date&hd=$hd&api_key=${apiKey.value}")
+      val request = Request[F](Method.GET, uri)
 
       client.expect[Response](request)
     }
 
-    override def download: Stream[F, Byte] = {
+    override def download(date: String, hd: Boolean): Stream[F, Byte] = {
       Stream
-        .eval(call)
+        .eval(call(date, hd))
         .flatMap { response: Response =>
-          val request = Request[F](org.http4s.Method.GET, Uri.unsafeFromString(response.hdurl))
+          val uri = if (hd) response.hdurl else response.url
+          val request = Request[F](Method.GET, Uri.unsafeFromString(uri))
 
           client.stream(request).flatMap(_.body)
         }
     }
   }
 
-  /** Extension method to download the APOD to a local file */
-  def downloadToLocalFile[F[_]](client: Client[F], fileName: String, blocker: Blocker)(
-    implicit cs: ContextShift[F],
-    F: ConcurrentEffect[F]
-  ): F[Unit] = {
-    val createOutputStream: F[OutputStream] = F.delay {
-      new BufferedOutputStream(
-        new FileOutputStream(fileName))
-    }
-
-    Apod[F](client)
-      .download
-      .observe(
-        fs2.io.writeOutputStream[F](createOutputStream, blocker)
-      )
-      .compile
-      .drain
-  }
 }
