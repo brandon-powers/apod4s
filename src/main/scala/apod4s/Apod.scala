@@ -1,25 +1,21 @@
-package apod
+package apod4s
 
-import java.io.{BufferedOutputStream, FileOutputStream}
-
-import cats.effect.{ConcurrentEffect, ExitCode, IO, IOApp}
-import cats.implicits._
+import cats.effect.ConcurrentEffect
 import com.typesafe.config.{Config, ConfigFactory}
+import fs2.Stream
 import io.circe.generic.JsonCodec
-import io.circe.syntax._
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.client.blaze._
 import org.http4s.{EntityDecoder, Request, Uri}
 
 /** @see [[https://api.nasa.gov/]] Under "APOD" */
-trait APOD[F[_]] {
-  def call: F[APOD.Response]
+trait Apod[F[_]] {
+  def call: F[Apod.Response]
 
-  def download(fileName: String): F[Unit]
+  def download: Stream[F, Byte]
 }
 
-object APOD {
+object Apod {
   val url = "https://api.nasa.gov/planetary/apod"
 
   case class Parameters(api_key: String, date: String, hd: Boolean = true) {
@@ -38,41 +34,29 @@ object APOD {
                       url: String)
 
 
-  def apply[F[_]](client: Client[F])(implicit F: ConcurrentEffect[F]): APOD[F] = new APOD[F] {
+  def apply[F[_]](client: Client[F])(implicit F: ConcurrentEffect[F]): Apod[F] = new Apod[F] {
     implicit val responseEntityDecoder: EntityDecoder[F, Response] = jsonOf[F, Response]
 
     override def call: F[Response] = {
       val root: Config = ConfigFactory.load
       val apiKey = root.getString("apod.api-key")
 
+      // TODO: Fix/clean-up parameter passing.
       val parameters = Parameters(apiKey, "2019-11-02")
-      val uri = Uri.unsafeFromString(s"${APOD.url}?${parameters.build}")
+      val uri = Uri.unsafeFromString(s"${Apod.url}?${parameters.build}")
       val request = Request[F](org.http4s.Method.GET, uri)
 
       client.expect[Response](request)
     }
 
-    override def download(fileName: String): F[Unit] = {
-      call.flatMap { response =>
-        val bytes: F[Array[Byte]] = client.expect[Array[Byte]](response.hdurl)
+    override def download: Stream[F, Byte] = {
+      Stream
+        .eval(call)
+        .flatMap { response: Response =>
+          val request = Request[F](org.http4s.Method.GET, Uri.unsafeFromString(response.hdurl))
 
-        bytes.flatMap { unwrappedBytes: Array[Byte] =>
-          val bos = new BufferedOutputStream(new FileOutputStream(fileName))
-          F.delay(bos.write(unwrappedBytes)) *> F.delay(bos.close())
+          client.stream(request).flatMap(_.body)
         }
-      }
     }
-  }
-}
-
-object APODApp extends IOApp {
-  override def run(args: List[String]): IO[ExitCode] = {
-    val builder = BlazeClientBuilder[IO](scala.concurrent.ExecutionContext.global)
-
-    builder.resource.use { client =>
-      APOD[IO](client).call.flatMap { response: APOD.Response =>
-        IO(println(response.asJson.spaces2))
-      }
-    }.as(ExitCode.Success)
   }
 }

@@ -1,6 +1,6 @@
 import Version._
 
-name := "apod"
+name := "apod4s"
 version := "0.1"
 scalaVersion := Version.scala
 
