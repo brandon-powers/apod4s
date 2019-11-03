@@ -14,9 +14,10 @@
 import io.circe.syntax._
 
 val client: Client[F] = ???
+val apiKey: ApiKey = ApiKey("<nasa-developer-key")
 
 // To fetch APOD metadata for November 2, 2019
-Apod[IO](client)
+Apod[IO](client, apiKey)
   .call(date = "2019-11-02")
   .flatMap { response: Apod.Response =>
     IO(println(response.asJson.spaces2))
@@ -36,7 +37,8 @@ Apod[IO](client)
 ```scala
 // To download the APOD for November 2, 2019
 val client: Client[F] = ???
-val bytes: Stream[F, Byte] = Apod[IO](client).download(date = "2019-11-02")
+val apiKey: ApiKey = ApiKey("<nasa-developer-key")
+val bytes: Stream[F, Byte] = Apod[IO](client, apiKey).download(date = "2019-11-02")
 ```
 
 #### Near Earth Object Web Service (NeoWs)
