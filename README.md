@@ -6,6 +6,7 @@
 
 - `nasa4s-apod`
 - `nasa4s-neows` (in progress)
+- `nasa4s-apps` (for test applications using `nasa4s`)
 
 #### Astronomy Picture of the Day (APOD)
 
@@ -35,7 +36,7 @@ Apod[IO](client)
 ```scala
 // To download the APOD for November 2, 2019
 val client: Client[F] = ???
-val bytes: Stream[F, Byte] = Apod[IO](client).download
+val bytes: Stream[F, Byte] = Apod[IO](client).download(date = "2019-11-02")
 ```
 
 #### Near Earth Object Web Service (NeoWs)

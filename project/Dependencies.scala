@@ -23,6 +23,6 @@ object Dependencies {
     "org.http4s" %% "http4s-circe" % Version.http4s,
     "io.circe" %% "circe-generic-extras" % "0.8.0"
   )
-
   lazy val `nasa4s-neows` = Seq()
+  lazy val `nasa4s-apps` = Seq()
 }

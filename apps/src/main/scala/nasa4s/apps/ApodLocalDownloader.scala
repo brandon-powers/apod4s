@@ -1,9 +1,10 @@
-package nasa4s.apod
+package nasa4s.apps
 
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp}
 import cats.implicits._
+import nasa4s.apod.Apod
 import nasa4s.core.ApiKey
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder

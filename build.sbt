@@ -40,3 +40,11 @@ lazy val `nasa4s-neows` = (project in file("neows"))
     libraryDependencies ++= Dependencies.`nasa4s-neows`
   )
 
+lazy val `nasa4s-apps` = (project in file("apps"))
+  .dependsOn(`nasa4s-apod`)
+  .settings(
+    commonSettings,
+    name := "nasa4s-apps",
+    libraryDependencies ++= Dependencies.`nasa4s-apps`
+  )
+
