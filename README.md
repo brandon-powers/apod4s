@@ -1,8 +1,10 @@
-#### apod4s
+### nasa4s
 
-`apod4s` is a purely functional API wrapper written in Scala. It wraps the Astronomy Picture of the Day (APOD) API provided by NASA.
+`nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/).
 
-###### Usage
+#### Astronomy Picture of the Day (APOD)
+
+##### Usage
 
 To call the API for APOD metadata:
 
@@ -48,3 +50,5 @@ Apod.downloadToLocalFile[IO](
   blocker
 )
 ```
+
+#### Near Earth Object Web Service (NeoWs)
