@@ -11,11 +11,6 @@ import org.http4s.client.blaze.BlazeClientBuilder
 
 import scala.concurrent.ExecutionContext
 
-trait ApodExporter[F[_]] {
-  /** Exports a batch of APODs to a target destination */
-  def export(dates: List[String]): F[Unit]
-}
-
 /** Exports APODs to the local filesystem
  *
  * @param apod                   downloads APODs
@@ -27,12 +22,8 @@ class ApodLocalExporter[F[_]](apod: Apod[F], maxConcurrentDownloads: Int, maxCon
   cs: ContextShift[F]
 ) extends ApodExporter[F] {
   override def export(dates: List[String]): F[Unit] = {
-    fs2.Stream
-      .emits(dates)
-      .evalTap(date => F.delay(println(s"Downloading and exporting $date APOD...")))
-      .covary[F]
-      .parEvalMapUnordered(maxConcurrentDownloads)(apod.download(_).compile.toVector)
-      .zipWithIndex
+    ApodExporter
+      .parDownloadApodsWithIndex[F](apod, dates, maxConcurrentDownloads)
       .parEvalMapUnordered(maxConcurrentExports) { case (apodData: Vector[Byte], index) =>
         val createOutputStream: F[OutputStream] = F.delay {
           new BufferedOutputStream(
@@ -52,6 +43,8 @@ class ApodLocalExporter[F[_]](apod: Apod[F], maxConcurrentDownloads: Int, maxCon
           .drain
       }.compile.drain
   }
+
+
 }
 
 object ApodLocalExporterApp extends IOApp {
@@ -73,7 +66,7 @@ object ApodLocalExporterApp extends IOApp {
           "2019-10-22",
           "2019-10-23",
           "2019-10-24"
-        ))
+          ))
       }
       .flatTap(_ => IO(println("Exiting...")))
       .as(ExitCode.Success)

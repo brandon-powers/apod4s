@@ -25,5 +25,9 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "3.0.8" % "test"
   )
   lazy val `nasa4s-neows` = Seq()
-  lazy val `nasa4s-apps` = Seq()
+  lazy val `nasa4s-apps` = Seq(
+    "com.lendup.fs2-blobstore" %% "core" % "0.6.+",
+    "com.lendup.fs2-blobstore" %% "sftp" % "0.6.+",
+    "com.lendup.fs2-blobstore" %% "s3" % "0.6.+"
+  )
 }
