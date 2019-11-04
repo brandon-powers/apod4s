@@ -32,7 +32,7 @@ object Apod {
 
   /** @todo Fix snake case naming and JSON parsing. */
   @JsonCodec
-  case class Response(copyright: String,
+  case class Response(copyright: Option[String],
                       date: String,
                       explanation: String,
                       hdurl: String,
