@@ -35,7 +35,7 @@ object Apod {
   case class Response(copyright: Option[String],
                       date: String,
                       explanation: String,
-                      hdurl: String,
+                      hdurl: Option[String],
                       media_type: String,
                       service_version: String,
                       title: String,
@@ -57,8 +57,10 @@ object Apod {
     override def download(date: String, hd: Boolean): Stream[F, Byte] = {
       Stream
         .eval(call(date, hd))
+        .filter(_.media_type == "image")
         .flatMap { response: Response =>
-          val uri = if (hd) response.hdurl else response.url
+          // Safe `get` due to the `isDefined` check.
+          val uri = if (hd && response.hdurl.isDefined) response.hdurl.get else response.url
           val request = Request[F](Method.GET, Uri.unsafeFromString(uri))
 
           client.stream(request).flatMap(_.body)

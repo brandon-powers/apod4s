@@ -1,12 +1,15 @@
 package nasa4s.apps
 
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
+import java.util.concurrent.Executors
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp}
 import cats.implicits._
 import nasa4s.apod.Apod
 import nasa4s.core.ApiKey
 import org.http4s.client.blaze.BlazeClientBuilder
+
+import scala.concurrent.ExecutionContext
 
 trait ApodExporter[F[_]] {
   /** Exports a batch of APODs to a target destination */
@@ -26,6 +29,7 @@ class ApodLocalExporter[F[_]](apod: Apod[F], maxConcurrentDownloads: Int, maxCon
   override def export(dates: List[String]): F[Unit] = {
     fs2.Stream
       .emits(dates)
+      .evalTap(date => F.delay(println(s"Downloading and exporting $date APOD...")))
       .covary[F]
       .parEvalMapUnordered(maxConcurrentDownloads)(apod.download(_).compile.toVector)
       .zipWithIndex
@@ -41,7 +45,7 @@ class ApodLocalExporter[F[_]](apod: Apod[F], maxConcurrentDownloads: Int, maxCon
         fs2.Stream
           .emits(apodData)
           .covary[F]
-          .observe {
+          .through {
             fs2.io.writeOutputStream[F](createOutputStream, blocker)
           }
           .compile
@@ -54,7 +58,7 @@ object ApodLocalExporterApp extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     val builder = BlazeClientBuilder[IO](scala.concurrent.ExecutionContext.global)
-    val blocker = Blocker.liftExecutionContext(scala.concurrent.ExecutionContext.global)
+    val blocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutor(Executors.newCachedThreadPool()))
     val apiKey = ApiKey("")
 
     builder
@@ -63,7 +67,15 @@ object ApodLocalExporterApp extends IOApp {
         val apod = Apod[IO](client, apiKey)
         val exporter = new ApodLocalExporter[IO](apod, maxConcurrentDownloads = 3, maxConcurrentExports = 3, blocker)
 
-        exporter.export(List("2019-11-01", "2019-10-03"))
-      }.as(ExitCode.Success)
+        exporter.export(List(
+          "2019-10-20",
+          "2019-10-21",
+          "2019-10-22",
+          "2019-10-23",
+          "2019-10-24"
+        ))
+      }
+      .flatTap(_ => IO(println("Exiting...")))
+      .as(ExitCode.Success)
   }
 }
