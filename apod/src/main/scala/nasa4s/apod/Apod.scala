@@ -1,12 +1,13 @@
 package nasa4s.apod
 
+import cats.{Applicative, ApplicativeError}
 import cats.effect.Sync
 import fs2.Stream
 import io.circe.generic.JsonCodec
 import nasa4s.core.ApiKey
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.{EntityDecoder, Method, Request, Uri}
+import org.http4s.{EntityDecoder, Method, Request, Status, Uri}
 
 /** Wraps the Astronomy Picture of the Day (APOD) API
  *
@@ -42,16 +43,23 @@ object Apod {
                       url: String)
 
 
-  def apply[F[_] : Sync](client: Client[F], apiKey: ApiKey): Apod[F] = new ApodImpl[F](client, apiKey)
+  def apply[F[_] : Sync : ApplicativeError](client: Client[F], apiKey: ApiKey): Apod[F] = new ApodImpl[F](client, apiKey)
 
-  private class ApodImpl[F[_] : Sync](client: Client[F], apiKey: ApiKey) extends Apod[F] {
+  private class ApodImpl[F[_] : Sync](client: Client[F], apiKey: ApiKey)(implicit F: ApplicativeError[F, Throwable]) extends Apod[F] {
     implicit val responseEntityDecoder: EntityDecoder[F, Response] = jsonOf[F, Response]
 
     override def call(date: String, hd: Boolean): F[Response] = {
       val uri = Uri.unsafeFromString(s"${Apod.url}?date=$date&hd=$hd&api_key=${apiKey.value}")
       val request = Request[F](Method.GET, uri)
 
-      client.expect[Response](request)
+      import cats.implicits._
+      client.fetch[Response](request) { response =>
+        response.status match {
+          case Status.ClientError(error) => F.raiseError()
+          case Status.ServerError =>
+        }
+        ???
+      }
     }
 
     override def download(date: String, hd: Boolean): Stream[F, Byte] = {

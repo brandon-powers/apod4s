@@ -3,7 +3,7 @@ package nasa4s.apps
 import java.io.{BufferedOutputStream, FileOutputStream, OutputStream}
 import java.util.concurrent.Executors
 
-import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp}
+import cats.effect.{Blocker, Clock, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp}
 import cats.implicits._
 import nasa4s.apod.Apod
 import nasa4s.core.ApiKey
@@ -60,15 +60,21 @@ object ApodLocalExporterApp extends IOApp {
         val apod = Apod[IO](client, apiKey)
         val exporter = new ApodLocalExporter[IO](apod, maxConcurrentDownloads = 3, maxConcurrentExports = 3, blocker)
 
-        exporter.export(List(
-          "2019-10-20",
-          "2019-10-21",
-          "2019-10-22",
-          "2019-10-23",
-          "2019-10-24"
-          ))
+        val dates = 1.to(2).flatMap { month =>
+          1.to(30).map { day =>
+            s"2018-$month-$day"
+          }
+        }.toList
+
+        val clock = Clock.create[IO]
+
+        for {
+          start <- clock.monotonic(scala.concurrent.duration.MILLISECONDS)
+          _ <- exporter.export(dates)
+          end <- clock.monotonic(scala.concurrent.duration.MILLISECONDS)
+        } yield start - end
       }
-      .flatTap(_ => IO(println("Exiting...")))
+      .flatTap(length => IO(println(s"Exiting, took $length milliseconds...")))
       .as(ExitCode.Success)
   }
 }
