@@ -5,8 +5,7 @@ import java.util.concurrent.Executors
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp}
 import cats.implicits._
-import nasa4s.apod.Apod
-import nasa4s.core.ApiKey
+import nasa4s.apod.{ApiKey, Apod}
 import org.http4s.client.blaze.BlazeClientBuilder
 
 import scala.concurrent.ExecutionContext
@@ -52,7 +51,7 @@ object ApodLocalExporterApp extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val builder = BlazeClientBuilder[IO](scala.concurrent.ExecutionContext.global)
     val blocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutor(Executors.newCachedThreadPool()))
-    val apiKey = ApiKey("")
+    val apiKey = ApiKey("<omitted>")
 
     builder
       .resource
@@ -60,13 +59,7 @@ object ApodLocalExporterApp extends IOApp {
         val apod = Apod[IO](client, apiKey)
         val exporter = new ApodLocalExporter[IO](apod, maxConcurrentDownloads = 3, maxConcurrentExports = 3, blocker)
 
-        exporter.export(List(
-          "2019-10-20",
-          "2019-10-21",
-          "2019-10-22",
-          "2019-10-23",
-          "2019-10-24"
-          ))
+        exporter.export(List("2020-03-01"))
       }
       .flatTap(_ => IO(println("Exiting...")))
       .as(ExitCode.Success)

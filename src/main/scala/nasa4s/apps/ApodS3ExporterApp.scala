@@ -2,8 +2,7 @@ package nasa4s.apps
 
 import cats.effect.{ConcurrentEffect, ExitCode, IO, IOApp}
 import cats.implicits._
-import nasa4s.apod.Apod
-import nasa4s.core.ApiKey
+import nasa4s.apod.{ApiKey, Apod}
 import org.http4s.client.blaze.BlazeClientBuilder
 
 /** Exports APODs to AWS S3

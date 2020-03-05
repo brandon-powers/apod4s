@@ -3,7 +3,6 @@ package nasa4s.apod
 import cats.effect.Sync
 import fs2.Stream
 import io.circe.generic.JsonCodec
-import nasa4s.core.ApiKey
 import org.http4s.circe._
 import org.http4s.client.Client
 import org.http4s.{EntityDecoder, Method, Request, Uri}

@@ -1,4 +1,4 @@
-package nasa4s.core
+package nasa4s.apod
 
 /** Represents a NASA developer key
  *
