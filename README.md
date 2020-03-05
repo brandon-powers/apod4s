@@ -1,7 +1,5 @@
 ### nasa4s
 
-[![Join the chat at https://gitter.im/nasa4s/community](https://badges.gitter.im/nasa4s/community.svg)](https://gitter.im/brandon-powers/nasa4s?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 `nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/), currently only supporting the Astronomy Picture of the Day (APOD) API.
 
 ```scala
