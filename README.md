@@ -1,14 +1,6 @@
 ### nasa4s
 
-[![Join the chat at https://gitter.im/nasa4s/community](https://badges.gitter.im/nasa4s/community.svg)](https://gitter.im/brandon-powers/nasa4s?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-`nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/), with each as an `sbt` sub-project.
-
-- `nasa4s-apod`
-- `nasa4s-neows` (in progress)
-- `nasa4s-apps` (for test applications using `nasa4s`)
-
-#### Astronomy Picture of the Day (APOD)
+`nasa4s` provides functional wrappers around [Nasa Open APIs](https://api.nasa.gov/), currently only supporting the Astronomy Picture of the Day (APOD) API.
 
 ```scala
 import io.circe.syntax._
@@ -41,4 +33,4 @@ val apiKey: ApiKey = ApiKey("<nasa-developer-key")
 val bytes: Stream[F, Byte] = Apod[IO](client, apiKey).download(date = "2019-11-02")
 ```
 
-#### Near Earth Object Web Service (NeoWs)
+Check out `nasa4s.apps` for usage of this wrapper in an application.
